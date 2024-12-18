@@ -24,11 +24,7 @@ export class TestGenerationError extends Error {
   }
 }
 
-export function handleError(error: Error, context: {
-  step?: string,
-  scenario?: string,
-  feature?: string
-}): void {
+export function handleError(_context: string, error: Error): void {
   if (error instanceof GherkinError) {
     console.error(`Gherkin Error: ${error.message}`, error.step);
   } else if (error instanceof PlaywrightGenerationError) {

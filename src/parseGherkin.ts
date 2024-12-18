@@ -5,50 +5,68 @@ import path from 'path';
 import { Parser, AstBuilder, GherkinClassicTokenMatcher } from '@cucumber/gherkin';
 import * as messages from '@cucumber/messages';
 
-export interface ParsedStep {
+interface GherkinStep {
   keyword: string;
   text: string;
+  line: number;
 }
 
-export interface ParsedScenario {
-  title: string;
-  steps: ParsedStep[];
+interface GherkinScenario {
+  name: string;
+  steps: GherkinStep[];
 }
 
-export interface ParsedFeature {
-  feature: string;
-  title: string;
-  scenarios: ParsedScenario[];
+interface GherkinFeature {
+  name: string;
+  scenarios: GherkinScenario[];
 }
 
-export async function parseFeatureFile(filePath: string): Promise<ParsedFeature> {
+interface GherkinChild {
+  scenario?: {
+    name: string;
+    steps: GherkinStepData[];
+  };
+}
+
+interface GherkinStepData {
+  keyword: string;
+  text: string;
+  line: number;
+}
+
+export default async function parseFeatureFile(filePath: string): Promise<GherkinFeature> {
   const featureContent = readFileSync(filePath, 'utf-8');
   const parser = new Parser(
     new AstBuilder(messages.IdGenerator.uuid()),
     new GherkinClassicTokenMatcher()
   );
   
-  const gherkinDocument = parser.parse(featureContent);
+  const gherkinDocument = parser.parse(featureContent) as {
+    feature?: {
+      name: string;
+      children: GherkinChild[];
+    };
+  };
   
   if (!gherkinDocument.feature) {
     throw new Error('No feature found in file');
   }
 
-  const parsedFeature: ParsedFeature = {
-    feature: path.basename(filePath, '.feature'),
-    title: gherkinDocument.feature.name,
+  const parsedFeature: GherkinFeature = {
+    name: path.basename(filePath, '.feature'),
     scenarios: []
   };
 
-  gherkinDocument.feature.children.forEach((child: any) => {
+  gherkinDocument.feature.children.forEach((child: GherkinChild) => {
     if (child.scenario) {
-      const parsedSteps: ParsedStep[] = child.scenario.steps.map((step: any) => ({
+      const parsedSteps: GherkinStep[] = child.scenario.steps.map((step: GherkinStepData) => ({
         keyword: step.keyword.trim(),
-        text: step.text
+        text: step.text,
+        line: step.line
       }));
 
       parsedFeature.scenarios.push({
-        title: child.scenario.name,
+        name: child.scenario.name,
         steps: parsedSteps
       });
     }

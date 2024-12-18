@@ -1,7 +1,7 @@
 import { generatePlaywrightTests } from './generatePlaywrightTests';
 import { Logger } from './utils/logger';
 
-async function main() {
+async function main(): Promise<void> {
   try {
     Logger.info('Starting test generation...');
     await generatePlaywrightTests();

@@ -1,121 +1,89 @@
 // src/generatePlaywrightTests.ts
-import { parseFeatureFile, ParsedFeature, ParsedScenario, ParsedStep } from './parseGherkin';
-import  {writeFileSync, mkdirSync, existsSync}  from 'fs';
-import path from 'path';
-import { glob } from 'glob';
-import { AIMapper } from './aiMapper';
-import { TestValidator } from './utils/testValidator';
-import { test, expect, Page } from '@playwright/test';
+import parseFeatureFile from './parseGherkin';
+import { StepHandler } from './utils/stepHandler';
+import * as fs from 'fs';
+import * as path from 'path';
+import { Logger } from './utils/logger';
 
-// Define directories and model path
+
+// Add types for any
+interface TestStep {
+  keyword: string;
+  text: string;
+  line: number;
+}
+
+interface TestScenario {
+  name: string;
+  steps: TestStep[];
+}
+
+// Define directories
 const featuresDir = path.resolve(__dirname, '../features');
 const generatedTestsDir = path.resolve(__dirname, '../generated-tests');
 
 // Ensure the generated-tests directory exists
-if (!existsSync(generatedTestsDir)) {
-  mkdirSync(generatedTestsDir);
+if (!fs.existsSync(generatedTestsDir)) {
+  fs.mkdirSync(generatedTestsDir);
 }
 
 // Function to generate Playwright tests
 export async function generatePlaywrightTests(): Promise<void> {
-  console.log('Starting test generation...');
+  const stepHandler = new StepHandler();
   
-  const aiMapper = new AIMapper();
-  const validator = new TestValidator();
-  
-  console.log('Initializing AI Mapper...');
-
-  console.log('Finding feature files...');
-  const featureFiles = await glob(`${featuresDir}/**/*.feature`);
-  console.log(`Found ${featureFiles.length} feature files`);
-  
-  for (const file of featureFiles) {
-    console.log(`\nProcessing feature file: ${file}`);
-    const parsedFeature = await parseFeatureFile(file);
+  try {
+    const featureFiles = await fs.promises.readdir(featuresDir);
     
-    for (const scenario of parsedFeature.scenarios) {
-      console.log(`\nProcessing scenario: ${scenario.title}`);
-      let testSteps = '';
-      let hasErrors = false;
-
-      for (const step of scenario.steps) {
-        try {
-          console.log(`Processing step: ${step.text}`);
-          const code = await aiMapper.generatePlaywrightCode(step.text);
-          
-          if (validator.validateGeneratedCode(code)) {
-            testSteps += `    ${code}\n`;
-          } else {
-            console.warn(`Invalid code generated for step: ${step.text}`);
-            hasErrors = true;
-          }
-        } catch (error) {
-          console.error(`Error generating code for step: ${step.text}`, error);
-          hasErrors = true;
-          testSteps += `    // TODO: ${step.text}\n`;
-        }
-      }
-
-      if (!hasErrors) {
-        console.log('Generating test file...');
-        const testFile = generateTestFile(parsedFeature, scenario, testSteps);
-        const validationErrors = validator.validateTestFile(testFile);
-        
-        if (validationErrors.length === 0) {
-          const featureName = parsedFeature.feature.replace(/\s+/g, '_').toLowerCase();
-          const scenarioName = scenario.title.replace(/\s+/g, '_').toLowerCase();
-          const testFileName = `${featureName}_${scenarioName}.spec.ts`;
-          console.log(`Writing test file: ${testFileName}`);
-          
-          writeTestFile(testFile, parsedFeature, scenario);
-        } else {
-          console.error('Test file validation failed:', validationErrors);
-        }
-      } else {
-        console.log('Skipping test file generation due to errors');
+    for (const file of featureFiles) {
+      if (!file.endsWith('.feature')) continue;
+      
+      const featurePath = path.join(featuresDir, file);
+      const feature = await parseFeatureFile(featurePath);
+      
+      Logger.info(`Processing feature: ${feature.name}`);
+      
+      for (const scenario of feature.scenarios) {
+        await processScenario(scenario, feature.name, stepHandler);
       }
     }
+  } catch (error) {
+    Logger.error('Error generating tests:', error);
+    throw error;
   }
+}
+
+async function processScenario(
+  scenario: TestScenario, 
+  featureName: string, 
+  stepHandler: StepHandler
+): Promise<void> {
+  const steps: string[] = [];
   
-  console.log('\nTest generation completed');
+  for (const step of scenario.steps) {
+    const playwrightCode = stepHandler.generatePlaywrightCode(step.text);
+    if (playwrightCode) {
+      steps.push(playwrightCode);
+    }
+  }
+
+  const testCode = await generatePlaywrightTest(scenario, steps);
+  await writeTestToFile(testCode, featureName, scenario.name);
 }
 
-function generateTestFile(
-  feature: ParsedFeature,
-  scenario: ParsedScenario,
-  testSteps: string
-): string {
+async function generatePlaywrightTest(scenario: TestScenario, steps: string[]): Promise<string> {
   return `
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
-test.describe('${feature.title}', () => {
-  test('${scenario.title}', async ({ page }) => {
-    ${testSteps}
+test.describe('${scenario.name}', () => {
+  test('${scenario.name}', async ({ page }) => {
+    ${steps.join('\n    ')}
   });
-});`.trim();
+});`;
 }
 
-function writeTestFile(
-  content: string,
-  feature: ParsedFeature,
-  scenario: ParsedScenario
-): void {
-  const featureName = feature.feature.replace(/\s+/g, '_').toLowerCase();
-  const scenarioName = scenario.title.replace(/\s+/g, '_').toLowerCase();
-  const testFileName = `${featureName}_${scenarioName}.spec.ts`;
-  const testFilePath = path.join(generatedTestsDir, testFileName);
-  writeFileSync(testFilePath, content, 'utf-8');
-  console.log(`Generated test: ${testFilePath}`);
-}
-
-export async function generatePlaywrightTest(scenario: any, steps: string[]): Promise<string> {
-  const testCode = `
-import { test, expect } from '@playwright/test';
-
-test('${scenario.title}', async ({ page }) => {
-  ${steps.join('\n  ')}
-});
-`;
-
-  return testCode;
+async function writeTestToFile(content: string, featureName: string, scenarioName: string): Promise<void> {
+  const fileName = `${featureName}_${scenarioName.replace(/\s+/g, '_').toLowerCase()}.spec.ts`;
+  const filePath = path.join(generatedTestsDir, fileName);
+  await fs.promises.writeFile(filePath, content, 'utf-8');
+  Logger.info(`Generated test file: ${fileName}`);
 }
