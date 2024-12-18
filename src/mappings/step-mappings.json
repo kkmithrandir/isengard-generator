@@ -1,0 +1,19 @@
+{
+  "navigation": {
+    "I navigate to {url}": "await page.goto('{url}'.startsWith('http') ? '{url}' : 'https://{url}');",
+    "I am on the {page} page": "await page.goto('https://{page}');",
+    "the user navigates to the login page": "await page.goto('/login');"
+  },
+  "assertions": {
+    "I see {text} in the title": "await expect(page).toHaveTitle('{text}');",
+    "I should see {text}": "await expect(page.getByText('{text}')).toBeVisible();",
+    "I see {text} in the results": "await expect(page.locator('.search-results')).toContainText('{text}');"
+  },
+  "actions": {
+    "the user enters valid credentials": [
+      "await page.fill('#username', 'testuser');",
+      "await page.fill('#password', 'password123');"
+    ],
+    "the user submits the login form": "await page.click('button[type=\"submit\"]');"
+  }
+} 

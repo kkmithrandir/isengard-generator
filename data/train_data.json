@@ -1,0 +1,103 @@
+[
+  {
+    "gherkin": "I navigate to {url}",
+    "playwright": "await page.goto('{url}')"
+  },
+  {
+    "gherkin": "I see {text} in the title",
+    "playwright": "await expect(page).toHaveTitle('{text}')"
+  },
+  {
+    "gherkin": "I click {button} button",
+    "playwright": "await page.click('button:has-text(\"{button}\")')"
+  },
+  {
+    "gherkin": "I see {text} in the results",
+    "playwright": "await expect(page.locator('.search-results')).toContainText('{text}')"
+  },
+  {
+    "gherkin": "I click the {text} link",
+    "playwright": "await page.click('a:has-text(\"{text}\")')"
+  },
+  {
+    "gherkin": "I hover over {element}",
+    "playwright": "await page.hover('{element}')"
+  },
+  {
+    "gherkin": "I check the URL contains {text}",
+    "playwright": "await expect(page).toHaveURL(/.*{text}.*/)"
+  },
+  {
+    "gherkin": "I drag {source} to {target}",
+    "playwright": "await page.dragAndDrop('{source}', '{target}')"
+  },
+  {
+    "gherkin": "I type {value} in the {field} field",
+    "playwright": "await page.fill('input[name=\"{field}\"]', '{value}')"
+  },
+  {
+    "gherkin": "I clear the {field} field",
+    "playwright": "await page.fill('input[name=\"{field}\"]', '')"
+  },
+  {
+    "gherkin": "I press enter in the {field} field",
+    "playwright": "await page.press('input[name=\"{field}\"]', 'Enter')"
+  },
+  {
+    "gherkin": "I select {option} from the {dropdown} dropdown",
+    "playwright": "await page.selectOption('select[name=\"{dropdown}\"]', '{option}')"
+  },
+  {
+    "gherkin": "I check the {checkbox} checkbox",
+    "playwright": "await page.check('input[name=\"{checkbox}\"]')"
+  },
+  {
+    "gherkin": "I uncheck the {checkbox} checkbox",
+    "playwright": "await page.uncheck('input[name=\"{checkbox}\"]')"
+  },
+  {
+    "gherkin": "I choose {option} from the {group} radio buttons",
+    "playwright": "await page.check('input[name=\"{group}\"][value=\"{option}\"]')"
+  },
+  {
+    "gherkin": "I navigate back",
+    "playwright": "await page.goBack()"
+  },
+  {
+    "gherkin": "I navigate forward",
+    "playwright": "await page.goForward()"
+  },
+  {
+    "gherkin": "I reload the page",
+    "playwright": "await page.reload()"
+  },
+  {
+    "gherkin": "I wait for the page to load",
+    "playwright": "await page.waitForLoadState('load')"
+  },
+  {
+    "gherkin": "I verify {text} is visible",
+    "playwright": "await expect(page.locator('text={text}')).toBeVisible()"
+  },
+  {
+    "gherkin": "I check that the element {selector} exists",
+    "playwright": "await expect(page.locator('{selector}')).toHaveCount(1)"
+  },
+  {
+    "gherkin": "I ensure the element {selector} is hidden",
+    "playwright": "await expect(page.locator('{selector}')).toBeHidden()"
+  },
+  {
+    "gherkin": "the user enters valid credentials",
+    "playwright": "await page.fill('#username', 'testuser');\nawait page.fill('#password', 'password123')"
+  },
+  {
+    "gherkin": "the user submits the login form",
+    "playwright": "await page.click('button[type=\"submit\"]')"
+  },
+  {
+    "gherkin": "the user navigates to the login page",
+    "playwright": "await page.goto('/login')"
+  }
+]
+

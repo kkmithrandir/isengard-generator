@@ -1,0 +1,30 @@
+{
+  "files.associations": {
+    "*.feature": "gherkin"
+  },
+  "editor.quickSuggestions": {
+    "strings": true,
+    "comments": true,
+    "other": true
+  },
+  "[gherkin]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "alexkrechik.cucumberautocomplete",
+    "editor.wordWrap": "on",
+    "editor.tabSize": 2
+  },
+  "cucumberautocomplete.steps": [
+    "data/train_data.json"
+  ],
+  "cucumberautocomplete.strictGherkinCompletion": false,
+  "cucumberautocomplete.customParameters": [
+    {
+      "parameter": "{url}",
+      "value": "\"([^\"]*)\""
+    },
+    {
+      "parameter": "{text}",
+      "value": "\"([^\"]*)\""
+    }
+  ]
+} 
