@@ -15,6 +15,7 @@
     "@cucumber/gherkin": "^30.0.0",
     "@cucumber/messages": "^24.0.0",
     "@playwright/test": "^1.40.0",
+    "chalk": "^4.1.2",
     "chokidar": "^3.5.3",
     "glob": "^10.3.10",
     "ts-node": "^10.9.2",

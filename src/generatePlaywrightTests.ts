@@ -33,6 +33,7 @@ export async function generatePlaywrightTests(): Promise<void> {
   
   try {
     const featureFiles = await fs.promises.readdir(featuresDir);
+    Logger.info(`🔎 Found ${featureFiles.length} feature files`);
     
     for (const file of featureFiles) {
       if (!file.endsWith('.feature')) continue;
@@ -40,14 +41,16 @@ export async function generatePlaywrightTests(): Promise<void> {
       const featurePath = path.join(featuresDir, file);
       const feature = await parseFeatureFile(featurePath);
       
-      Logger.info(`Processing feature: ${feature.name}`);
+      Logger.feature(feature.name);
       
       for (const scenario of feature.scenarios) {
+        Logger.info(`📝 Processing scenario: ${scenario.name}`);
         await processScenario(scenario, feature.name, stepHandler);
       }
     }
+    Logger.success('✨ Test generation completed successfully');
   } catch (error) {
-    Logger.error('Error generating tests:', error);
+    Logger.error('Test generation failed:', error);
     throw error;
   }
 }
@@ -85,5 +88,5 @@ async function writeTestToFile(content: string, featureName: string, scenarioNam
   const fileName = `${featureName}_${scenarioName.replace(/\s+/g, '_').toLowerCase()}.spec.ts`;
   const filePath = path.join(generatedTestsDir, fileName);
   await fs.promises.writeFile(filePath, content, 'utf-8');
-  Logger.info(`Generated test file: ${fileName}`);
+  Logger.file(fileName);
 }

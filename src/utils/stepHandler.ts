@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import path from 'path';
+import { Logger } from './logger';
 
 interface TrainingPattern {
   gherkin: string;
@@ -78,6 +79,7 @@ export class StepHandler {
       }
 
       console.log('Generated command:', playwrightCommand);
+      Logger.pattern(step.gherkin, playwrightCommand);
       return playwrightCommand;
     } catch (error) {
       console.error('Error generating code:', error);
